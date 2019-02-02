@@ -32,6 +32,7 @@ class ProductItem(scrapy.Item):
     #TO LET YOU REMOVE ALL PRODUCTS WITH SKU=TEST
 
     # oc_product_image
+    image_urls = scrapy.Field()
     images = scrapy.Field() # image urls
 
     # oc_product_description
@@ -43,7 +44,6 @@ class ProductItem(scrapy.Item):
 
     # oc_category
     category = scrapy.Field()
-    category_filter = scrapy.Field()
 
     # oc_manufacturer
     manufacturer = scrapy.Field()

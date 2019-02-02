@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re
+import os
+import wget
 from ..items import ProductItem
-from ..utils import session, Product
+# from scraper.settings import IMAGES_STORE
 from shop_orm.models import (
     OcProduct, OcCategory, OcCategoryDescription,
     OcManufacturer, OcManufacturerDescription
@@ -16,7 +18,7 @@ class EroskladSpider(scrapy.Spider):
     name = 'erosklad'
     allowed_domains = ['erosklad.com']
     start_urls = ['https://www.erosklad.com/authorization']
-
+    
     # parse category
     def parse(self, response):
         return scrapy.FormRequest(
@@ -33,14 +35,16 @@ class EroskladSpider(scrapy.Spider):
         # if "authentication failed" in response.body:
         #     self.logger.error("Login failed")
         #     return False
+        # from scrapy.shell import inspect_response
+        # inspect_response(response, self)
         links = response.xpath('//div[@class="left-nav__menu"]/div[1]/div/ul/li/a')
-        for link in links[3:]:
+        for link in links[3:5]:
             link_href = link.xpath('.//@href').extract_first()
             link_name = link.xpath('.//text()').extract_first()
             url = response.urljoin(link_href)
 
             request = scrapy.Request(url, callback=self.parse_category_filter)
-            category = OcCategoryDescription.objects.filter(name=link_name)
+            category = OcCategoryDescription.objects.filter(name=link_name).first()
             if category:
                 request.meta.setdefault('category_id', category.category_id)
             else:
@@ -57,7 +61,6 @@ class EroskladSpider(scrapy.Spider):
     def parse_category_filter(self, response):
         # from scrapy.shell import inspect_response
         # inspect_response(response, self)
-        meta = {'category_id': response.meta['category_id']}
         links = response.xpath(
             '//span[@class="left-nav__menu-body-inside-title"]/following-sibling::ul/li/a'
         )
@@ -68,45 +71,43 @@ class EroskladSpider(scrapy.Spider):
                 url = response.urljoin(link_href)
 
                 request = scrapy.Request(url, callback=self.parse_detail_page)
-                category = OcCategoryDescription.objects.filter(name=link_name)
+                category = OcCategoryDescription.objects.filter(name=link_name).first()
                 if category:
-                    request.meta.setdefault('subcategory_id', category.category_id)
+                    request.meta.setdefault('category_id', category.category_id)
                 else:
                     category = OcCategory.objects.create(parent_id=meta['category_id'])
                     category_d = OcCategoryDescription.objects.create(
                         name=link_name, category_id=category.category_id
                     )
-                    meta.setdefault('subcategory_id', category_d.category_id)
-                request.meta.update(meta)
+                    request.meta.setdefault('category_id', category_d.category_id)
 
-                if not request.meta.get('subcategory_id'):
+                if not request.meta.get('category_id'):
                     continue
                 yield request
         else:
             request = scrapy.Request(response.url, callback=self.parse_detail_page)
-            request.meta.update(meta)
-            yield request 
+            request.meta.setdefault('category_id', response.meta['category_id'])
+            if request.meta.get('category_id'):
+                yield request 
 
     def parse_detail_page(self, response):
         # from scrapy.shell import inspect_response
         # inspect_response(response, self)
         item = ProductItem()
         # oc_category
-        item['category'] = response.meta['category_name']
-        item['category_filter'] = response.meta['filter_name']
+        item['category'] = response.meta['category_id']
 
         products = response.xpath('//ul[@class="catalogue__list"]/li')
         
         # get price and sku
         # check if product exist in db
-        for product in products:
+        for product in products[:2]:
             price = product.xpath(
                 './/div[@class="catalogue__list-item-menu"]/span/text()'
             ).extract_first()
             price = int(re.sub(r'\D', '', price)) if price else None
             model = product.xpath('./div[2]/div[2]/p/text()').extract_first()
             
-            # product_model = session.query(Product).filter_by(model=model).first()
             p_instance = OcProduct.objects.filter(model=model).first()
             if p_instance:
                 if price:
@@ -149,7 +150,12 @@ class EroskladSpider(scrapy.Spider):
         # oc_product
         image = card_gallery.xpath('.//div[1]/div[1]/a/@href').extract_first()
         if image:
-            item['image'] = response.urljoin(image)
+            item['image'] = wget.download(
+                response.urljoin(image), 
+                '/home/m/web-dev/sexshop_parser/media'
+            )
+            
+
         
         # model = card_gallery.xpath(
         #     './/div[1]/div[2]/div[@class="item-card__short-info"]/div[1]/text()'
@@ -174,8 +180,6 @@ class EroskladSpider(scrapy.Spider):
             item['images'] = [response.urljoin(img) for img in images]
 
         # different oc_ tables
-        # from scrapy.shell import inspect_response
-        # inspect_response(response, self)
         options = {
             u'Диаметр': {'item': 'diameter', 'param': 'd'}, # d - decimal
             u'Материал': {'item': 'material', 'param': 's'}, # s - string
@@ -187,7 +191,7 @@ class EroskladSpider(scrapy.Spider):
         for k, v in options.items():
             if k == u'Производитель':
                 option = card_info.xpath(
-                    f'.//table/tbody/tr[contains(., "{k}")]/td[2]/a/@href'
+                    f'.//table/tbody/tr[contains(., "{k}")]/td[2]/a/text()'
                 ).extract_first()
             else:
                 option = card_info.xpath(
@@ -216,9 +220,9 @@ class EroskladSpider(scrapy.Spider):
             manfac, m_created = OcManufacturer.object.get_or_create(name=item['manufacturer'])
             if m_created:
                 OcManufacturerDescription.object.create(
-                    manufacturer_id=m.manufacturer_id, 
-                    name=m.name, 
-                    meta_title=m.name
+                    manufacturer_id=manfac.manufacturer_id, 
+                    name=manfac.name, 
+                    meta_title=manfac.name
                 )
             item['manufacturer'] = manfac.manufacturer_id
 
