@@ -204,8 +204,6 @@ class EroskladSpider(scrapy.Spider):
                 else:
                     setattr(item, v['item'], re.sub(r'\D', '', option))
         
-        print("-----------------------ITEM---------------------------")
-        print(item)
         card_info.xpath('.//div[3]').extract_first()
         # oc_product_description
         name = card_gallery.xpath('//p[@class="item-card__title"]/text()').extract_first()
@@ -226,4 +224,6 @@ class EroskladSpider(scrapy.Spider):
                 )
             item['manufacturer'] = manfac.manufacturer_id
 
+        print(item)
+        print("-----------------------ITEM---------------------------")
         yield item

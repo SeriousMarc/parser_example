@@ -14,7 +14,7 @@ from django.core.exceptions import FieldError
 class ScraperPipeline(object):
     def process_item(self, item, spider):
         # save images
-        
+        print('-------------------PIPELINE--------------------------')
         # oc_product
         product_item = {k: v for k, v in item.items() if item[k]}
 
