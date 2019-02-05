@@ -8,7 +8,6 @@ from scraper.scraper import spiders
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        os.environ['SCRAPY_PROJECT'] = 'sexshop'
         process = CrawlerProcess(get_project_settings())
         process.crawl(spiders.erosklad.EroskladSpider)
         process.start()

@@ -32,6 +32,7 @@ class EroskladSpider(scrapy.Spider):
         )
 
     def parse_after_login(self, response):
+        """parse main catogories"""
         # if "authentication failed" in response.body:
         #     self.logger.error("Login failed")
         #     return False
@@ -54,11 +55,11 @@ class EroskladSpider(scrapy.Spider):
                 )
                 request.meta.setdefault('category_id', category_d.category_id)
 
-            if not request.meta.get('category_id'):
-                continue
-            yield request
+            if request.meta.get('category_id'):
+                yield request
 
     def parse_category_filter(self, response):
+        """parse subcatogories"""
         # from scrapy.shell import inspect_response
         # inspect_response(response, self)
         links = response.xpath(
@@ -81,13 +82,14 @@ class EroskladSpider(scrapy.Spider):
                     )
                     request.meta.setdefault('category_id', category_d.category_id)
 
-                if not request.meta.get('category_id'):
-                    continue
-                yield request
+                if request.meta.get('category_id'):
+                    print('-------------REQUEST1', request.meta.get('category_id'))
+                    yield request
         else:
             request = scrapy.Request(response.url, callback=self.parse_detail_page)
             request.meta.setdefault('category_id', response.meta['category_id'])
             if request.meta.get('category_id'):
+                print('-------------REQUEST2', request.meta.get('category_id'))
                 yield request 
 
     def parse_detail_page(self, response):
@@ -137,8 +139,10 @@ class EroskladSpider(scrapy.Spider):
             '//div[@class=" catalogue__header-bottom"]/ul/li[@class="next"]/a/@data-catalog-page'
         ).extract_first()
         if next_page:
-            url = response.url + f"?page={next_page}"
-            yield scrapy.Request(url, callback=self.parse_detail_page)
+            url = response.url.split('?')[0] + f"?page={next_page}"
+            request = scrapy.Request(url, callback=self.parse_detail_page)
+            request.meta['category_id'] = response.meta['category_id']
+            yield request
         
     def parse_detail(self, response):
         item = response.meta['item']
@@ -148,15 +152,16 @@ class EroskladSpider(scrapy.Spider):
         card_info = response.xpath('//div[@class="item-card__info"]/div')
 
         # oc_product
-        image = card_gallery.xpath('.//div[1]/div[1]/a/@href').extract_first()
-        if image:
-            item['image'] = wget.download(
-                response.urljoin(image), 
-                '/home/m/web-dev/sexshop_parser/media'
-            )
+        try:
+            image = card_gallery.xpath('.//div[1]/div[1]/a/@href').extract_first()
+            if image:
+                item['image'] = wget.download(
+                    response.urljoin(image), 
+                    '/home/m/web-dev/sexshop_parser/media'
+                )
+        except Exception as e:
+            print(e)
             
-
-        
         # model = card_gallery.xpath(
         #     './/div[1]/div[2]/div[@class="item-card__short-info"]/div[1]/text()'
         # ).extract_first()
@@ -175,9 +180,9 @@ class EroskladSpider(scrapy.Spider):
 
         # oc_product_image
 
-        images = card_gallery.xpath('./div[@class="item-card__carousel"]/a/@href').extract()
-        if images:
-            item['images'] = [response.urljoin(img) for img in images]
+        image_urls = card_gallery.xpath('./div[@class="item-card__carousel"]/a/@href').extract()
+        if image_urls:
+            item['image_urls'] = [response.urljoin(url) for url in image_urls]
 
         # different oc_ tables
         options = {

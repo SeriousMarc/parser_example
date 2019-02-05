@@ -1479,7 +1479,7 @@ class OcProductAttribute(models.Model):
 
 class OcProductDescription(models.Model):
     product_id = models.IntegerField(primary_key=True)
-    language_id = models.IntegerField()
+    language_id = models.IntegerField(default=1)
     name = models.CharField(max_length=255)
     description = models.TextField()
     tag = models.TextField()
@@ -1523,7 +1523,7 @@ class OcProductImage(models.Model):
     product_image_id = models.AutoField(primary_key=True)
     product_id = models.IntegerField()
     image = models.CharField(max_length=255, blank=True, null=True)
-    sort_order = models.IntegerField()
+    sort_order = models.IntegerField(default=0)
 
     class Meta:
         managed = False
