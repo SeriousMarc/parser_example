@@ -1,3 +1,5 @@
 .venv/
 .vscode/
 sexshop/local_settings.py
+scraper/scraper/local_settings.py
+media/

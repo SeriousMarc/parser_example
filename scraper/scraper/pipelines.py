@@ -8,12 +8,13 @@ import re
 import os
 from shop_orm.models import (
     OcProduct, OcProductDescription, OcManufacturer, OcManufacturerDescription, 
-    OcCategory, OcCategoryDescription, OcProductImage
+    OcCategory, OcCategoryDescription, OcProductImage, OcProductToStore,
+    OcProductToCategory
 )
 from scrapy.exceptions import DropItem
 from django.core.exceptions import FieldError
 from scraper.scraper.settings import IMAGES_STORE
-
+from django.db import IntegrityError, transaction
 
 class ProductPipeline(object):
     def process_item(self, item, spider):
@@ -56,28 +57,42 @@ class ProductPipeline(object):
         print('--------------------PRODUCT_ITEM', product_description_item)
         try:
             # save oc_product
+            saved_instances = []
             product = OcProduct.objects.create(**product_item)
+            saved_instances.append(product)
             if product:
                 # save oc_product_description
                 product_d = OcProductDescription.objects.create(
                     product_id=product.product_id,
                     **product_description_item
                 )
-                if product_d and product_image_item.get('images'):
-                    image_list = [
-                        OcProductImage(
-                            product_id=product_d.product_id,
-                            image=os.path.join(
-                                IMAGES_STORE, 
-                                re.search(r'\w+(?:\.\w+)*$', img['path']).group()
-                            )
+                saved_instances.append(product_d)
+                product_store = OcProductToStore.objects.create(product_id=product.product_id)
+                saved_instances.append(product_store)
+                product_category = OcProductToCategory.objects.create(
+                    product_id=product.product_id,
+                    category_id=product_category_item.get('category')
+                )
+
+            if 'product_d' in locals() and product_d and product_image_item.get('images'):
+                image_list = [
+                    OcProductImage(
+                        product_id=product_d.product_id,
+                        image=os.path.join(
+                            IMAGES_STORE, 
+                            # re.search(r'\w+(?:\.\w+)*$', img['path']).group()
+                            img['path']
                         )
-                        for img in product_image_item['images']
-                    ]
-                    _msg = OcProductImage.objects.bulk_create(image_list)
-        except FieldError:
+                    )
+                    for img in product_image_item['images']
+                ]
+                _msg = OcProductImage.objects.bulk_create(image_list)
+        except Exception as e:
+            print('----------------------Item saving process is failed-------------------------')
+            for i in saved_instances:
+                i.delete()
             if '_msg' in locals():
                 print(_msg)
-            print('----------------------Item saving process is failed-------------------------')
+            print(e)
             raise DropItem()
         return item

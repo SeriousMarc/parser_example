@@ -12,7 +12,7 @@ ITEM_PIPELINES = {
 }
 
 import os
-IMAGES_STORE = '/home/m/wev-dev/sexshop_parser/media'
+IMAGES_STORE = ''
 
 # LOG_LEVEL = 'ERROR'
 LOG_LEVEL = 'DEBUG'
@@ -27,3 +27,8 @@ COOKIES_ENABLED = True
 AUTOTHROTTLE_ENABLED = True
 
 AUTOTHROTTLE_DEBUG = False
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass

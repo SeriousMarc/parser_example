@@ -10,6 +10,7 @@ from shop_orm.models import (
     OcManufacturer, OcManufacturerDescription
 )
 from datetime import datetime
+from scraper.scraper.settings import IMAGES_STORE
 
 DT_FORMAT = '%Y-%m-%d'
 
@@ -116,7 +117,6 @@ class EroskladSpider(scrapy.Spider):
                     if price != int(p_instance.price):
                         p_instance.price = price
                         p_instance.date_mofidied = datetime.now().strftime(DT_FORMAT)
-                        p_instance.sku = 'TEST'
                     p_instance.status = 1 # есть в наличии
                 else:
                     p_instance.status = 0
@@ -139,14 +139,13 @@ class EroskladSpider(scrapy.Spider):
             '//div[@class=" catalogue__header-bottom"]/ul/li[@class="next"]/a/@data-catalog-page'
         ).extract_first()
         if next_page:
-            url = response.url.split('?')[0] + f"?page={next_page}"
+            url = response.url.split('?')[0] + "?page={}".format(next_page)
             request = scrapy.Request(url, callback=self.parse_detail_page)
             request.meta['category_id'] = response.meta['category_id']
             yield request
         
     def parse_detail(self, response):
         item = response.meta['item']
-        item['sku'] = 'TEST'
 
         card_gallery = response.xpath('//div[@class="item-card__gallery"]')
         card_info = response.xpath('//div[@class="item-card__info"]/div')
@@ -157,7 +156,7 @@ class EroskladSpider(scrapy.Spider):
             if image:
                 item['image'] = wget.download(
                     response.urljoin(image), 
-                    '/home/m/web-dev/sexshop_parser/media'
+                    IMAGES_STORE
                 )
         except Exception as e:
             print(e)
@@ -196,11 +195,11 @@ class EroskladSpider(scrapy.Spider):
         for k, v in options.items():
             if k == u'Производитель':
                 option = card_info.xpath(
-                    f'.//table/tbody/tr[contains(., "{k}")]/td[2]/a/text()'
+                    './/table/tbody/tr[contains(., "{}")]/td[2]/a/text()'.format(k)
                 ).extract_first()
             else:
                 option = card_info.xpath(
-                    f'.//table/tbody/tr[contains(., "{k}")]/td[2]/text()'
+                    './/table/tbody/tr[contains(., "{}")]/td[2]/text()'.format(k)
                 ).extract_first()
             if hasattr(item, v['item']) and option:
                 option = option.strip()

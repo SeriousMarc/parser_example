@@ -1611,7 +1611,7 @@ class OcProductSpecial(models.Model):
 class OcProductToCategory(models.Model):
     product_id = models.IntegerField(primary_key=True)
     category_id = models.IntegerField()
-    main_category = models.IntegerField()
+    main_category = models.IntegerField(default=1)
 
     class Meta:
         managed = False
@@ -1642,7 +1642,7 @@ class OcProductToLayout(models.Model):
 
 class OcProductToStore(models.Model):
     product_id = models.IntegerField(primary_key=True)
-    store_id = models.IntegerField()
+    store_id = models.IntegerField(default=0)
 
     class Meta:
         managed = False
