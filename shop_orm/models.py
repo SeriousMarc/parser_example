@@ -1401,7 +1401,7 @@ class OcProduct(models.Model):
     isbn = models.CharField(max_length=17, default='')
     mpn = models.CharField(max_length=64, default='')
     location = models.CharField(max_length=128, default='')
-    quantity = models.IntegerField(default=0)
+    quantity = models.IntegerField(default=99)
     stock_status_id = models.IntegerField(default=-1)
     image = models.CharField(max_length=255, blank=True, null=True)
     manufacturer_id = models.IntegerField(default=-1)
