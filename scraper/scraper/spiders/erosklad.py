@@ -4,13 +4,12 @@ import re
 import os
 import wget
 from ..items import ProductItem
-# from scraper.settings import IMAGES_STORE
 from shop_orm.models import (
     OcProduct, OcCategory, OcCategoryDescription,
     OcManufacturer, OcManufacturerDescription
 )
 from datetime import datetime
-from scraper.scraper.settings import IMAGES_STORE
+from scraper.scraper.settings import IMAGE_DB_URL
 
 DT_FORMAT = '%Y-%m-%d'
 
@@ -156,7 +155,7 @@ class EroskladSpider(scrapy.Spider):
             if image:
                 item['image'] = wget.download(
                     response.urljoin(image), 
-                    IMAGES_STORE
+                    IMAGE_DB_URL
                 )
         except Exception as e:
             print(e)

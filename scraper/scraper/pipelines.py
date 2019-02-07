@@ -13,13 +13,13 @@ from shop_orm.models import (
 )
 from scrapy.exceptions import DropItem
 from django.core.exceptions import FieldError
-from scraper.scraper.settings import IMAGES_STORE
+from scraper.scraper.settings import IMAGE_DB_URL
 from django.db import IntegrityError, transaction
 
 class ProductPipeline(object):
     def process_item(self, item, spider):
-        # save images
         print('-------------------PIPELINE--------------------------')
+        # save images
         # oc_product
         product_item = {k: v for k, v in item.items() if item[k]}
 
@@ -74,25 +74,27 @@ class ProductPipeline(object):
                     category_id=product_category_item.get('category')
                 )
 
-            if 'product_d' in locals() and product_d and product_image_item.get('images'):
-                image_list = [
-                    OcProductImage(
-                        product_id=product_d.product_id,
-                        image=os.path.join(
-                            IMAGES_STORE, 
-                            # re.search(r'\w+(?:\.\w+)*$', img['path']).group()
-                            img['path']
-                        )
-                    )
-                    for img in product_image_item['images']
-                ]
-                _msg = OcProductImage.objects.bulk_create(image_list)
+            # SAVE GALLERY IMAGES
+
+            # if 'product_d' in locals() and product_d and product_image_item.get('images'):
+            #     image_list = [
+            #         OcProductImage(
+            #             product_id=product_d.product_id,
+            #             image=os.path.join(
+            #                 IMAGE_DB_URL, 
+            #                 # re.search(r'\w+(?:\.\w+)*$', img['path']).group()
+            #                 img['path']
+            #             )
+            #         )
+            #         for img in product_image_item['images']
+            #     ]
+            #     _msg = OcProductImage.objects.bulk_create(image_list)
         except Exception as e:
             print('----------------------Item saving process is failed-------------------------')
             for i in saved_instances:
                 i.delete()
-            if '_msg' in locals():
-                print(_msg)
+            # if '_msg' in locals():
+            #     print(_msg)
             print(e)
             raise DropItem()
         return item

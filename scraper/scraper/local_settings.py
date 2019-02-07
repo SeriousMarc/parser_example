@@ -1,2 +1,4 @@
 import os
-IMAGES_STORE = 'media'
+IMAGE_BASE_URL = ''
+IMAGE_DB_URL = ''
+IMAGES_STORE = os.path.join(IMAGE_BASE_URL, IMAGE_DB_URL)
