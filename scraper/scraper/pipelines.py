@@ -52,9 +52,6 @@ class ProductPipeline(object):
                 'category', product_item.pop('category')
             )
 
-        print('--------------------ITEM ITEM', item)
-        print('--------------------PRODUCT_ITEM', product_item)
-        print('--------------------PRODUCT_ITEM', product_description_item)
         try:
             # save oc_product
             saved_instances = []

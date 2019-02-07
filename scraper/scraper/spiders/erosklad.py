@@ -36,8 +36,6 @@ class EroskladSpider(scrapy.Spider):
         # if "authentication failed" in response.body:
         #     self.logger.error("Login failed")
         #     return False
-        # from scrapy.shell import inspect_response
-        # inspect_response(response, self)
         links = response.xpath('//div[@class="left-nav__menu"]/div[1]/div/ul/li/a')
         for link in links[3:5]:
             link_href = link.xpath('.//@href').extract_first()
@@ -60,8 +58,6 @@ class EroskladSpider(scrapy.Spider):
 
     def parse_category_filter(self, response):
         """parse subcatogories"""
-        # from scrapy.shell import inspect_response
-        # inspect_response(response, self)
         links = response.xpath(
             '//span[@class="left-nav__menu-body-inside-title"]/following-sibling::ul/li/a'
         )
@@ -83,18 +79,15 @@ class EroskladSpider(scrapy.Spider):
                     request.meta.setdefault('category_id', category_d.category_id)
 
                 if request.meta.get('category_id'):
-                    print('-------------REQUEST1', request.meta.get('category_id'))
                     yield request
         else:
             request = scrapy.Request(response.url, callback=self.parse_detail_page)
             request.meta.setdefault('category_id', response.meta['category_id'])
             if request.meta.get('category_id'):
-                print('-------------REQUEST2', request.meta.get('category_id'))
+                
                 yield request 
 
     def parse_detail_page(self, response):
-        # from scrapy.shell import inspect_response
-        # inspect_response(response, self)
         item = ProductItem()
         # oc_category
         item['category'] = response.meta['category_id']
@@ -234,7 +227,5 @@ class EroskladSpider(scrapy.Spider):
                     meta_title=manfac.name
                 )
             item['manufacturer'] = manfac.manufacturer_id
-
-        print(item)
         print("-----------------------ITEM---------------------------")
         yield item
