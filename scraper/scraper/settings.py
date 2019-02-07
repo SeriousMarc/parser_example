@@ -7,7 +7,7 @@ NEWSPIDER_MODULE = 'scraper.scraper.spiders'
 ROBOTSTXT_OBEY = False
 
 ITEM_PIPELINES = {
-    'scrapy.pipelines.images.ImagesPipeline': 300,
+    # 'scrapy.pipelines.images.ImagesPipeline': 300,
     'scraper.scraper.pipelines.ProductPipeline': 301
 }
 
