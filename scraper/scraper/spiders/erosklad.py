@@ -9,7 +9,7 @@ from shop_orm.models import (
     OcManufacturer, OcManufacturerDescription
 )
 from datetime import datetime
-from scraper.scraper.settings import IMAGE_DB_URL
+from scraper.scraper.settings import IMAGE_DB_URL, IMAGES_STORE
 
 DT_FORMAT = '%Y-%m-%d'
 
@@ -153,12 +153,20 @@ class EroskladSpider(scrapy.Spider):
         try:
             image = card_gallery.xpath('.//div[1]/div[1]/a/@href').extract_first()
             if image:
-                item['image'] = wget.download(
+                if not os.path.exists(IMAGES_STORE):
+                    os.makedirs(IMAGES_STORE)
+                image_url = wget.download(
                     response.urljoin(image), 
-                    IMAGE_DB_URL
+                    IMAGES_STORE
                 )
+                if image_url:
+                    item['image'] = os.path.join(
+                        IMAGE_DB_URL, 
+                        re.search(r'\w+(?:\.\w+)*$', image_url).group()
+                    )
         except Exception as e:
             print(e)
+            return None
             
         # model = card_gallery.xpath(
         #     './/div[1]/div[2]/div[@class="item-card__short-info"]/div[1]/text()'
