@@ -115,6 +115,9 @@ class EroskladSpider(scrapy.Spider):
                     p_instance.status = 0
                 p_instance.save()
                 continue
+            elif not price:
+                continue
+                
             link = product.xpath('./div[1]/a/@href').extract_first()
             url = response.urljoin(link)
             request = scrapy.Request(url, callback=self.parse_detail)
