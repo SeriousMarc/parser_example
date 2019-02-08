@@ -88,15 +88,16 @@ class EroskladSpider(scrapy.Spider):
                 yield request 
 
     def parse_detail_page(self, response):
-        item = ProductItem()
-        # oc_category
-        item['category'] = response.meta['category_id']
 
         products = response.xpath('//ul[@class="catalogue__list"]/li')
         
         # get price and sku
         # check if product exist in db
         for product in products:
+            item = ProductItem()
+            # oc_category
+            item['category'] = response.meta['category_id']
+            
             price = product.xpath(
                 './/div[@class="catalogue__list-item-menu"]/span/text()'
             ).extract_first()
