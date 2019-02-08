@@ -97,7 +97,7 @@ class EroskladSpider(scrapy.Spider):
             item = ProductItem()
             # oc_category
             item['category'] = response.meta['category_id']
-            
+
             price = product.xpath(
                 './/div[@class="catalogue__list-item-menu"]/span/text()'
             ).extract_first()
@@ -156,7 +156,8 @@ class EroskladSpider(scrapy.Spider):
                 if image_url:
                     item['image'] = os.path.join(
                         IMAGE_DB_URL, 
-                        re.search(r'\w+(?:\.\w+)*$', image_url).group()
+                        # re.search(r'\w+(?:\.\w+)*$', image_url).group()
+                        re.search(r'[^/]+$', image_url).group()
                     )
         except Exception as e:
             print(e)
