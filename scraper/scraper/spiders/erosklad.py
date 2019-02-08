@@ -37,7 +37,7 @@ class EroskladSpider(scrapy.Spider):
         #     self.logger.error("Login failed")
         #     return False
         links = response.xpath('//div[@class="left-nav__menu"]/div[1]/div/ul/li/a')
-        for link in links[3:5]:
+        for link in links:
             link_href = link.xpath('.//@href').extract_first()
             link_name = link.xpath('.//text()').extract_first()
             url = response.urljoin(link_href)
@@ -62,7 +62,7 @@ class EroskladSpider(scrapy.Spider):
             '//span[@class="left-nav__menu-body-inside-title"]/following-sibling::ul/li/a'
         )
         if links:
-            for link in links[1:2]:
+            for link in links:
                 link_href = link.xpath('.//@href').extract_first()
                 link_name = link.xpath('.//text()').extract_first()
                 url = response.urljoin(link_href)
@@ -96,7 +96,7 @@ class EroskladSpider(scrapy.Spider):
         
         # get price and sku
         # check if product exist in db
-        for product in products[:2]:
+        for product in products:
             price = product.xpath(
                 './/div[@class="catalogue__list-item-menu"]/span/text()'
             ).extract_first()
