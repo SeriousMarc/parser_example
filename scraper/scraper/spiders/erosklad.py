@@ -9,7 +9,9 @@ from shop_orm.models import (
     OcManufacturer, OcManufacturerDescription
 )
 from datetime import datetime
-from scraper.scraper.settings import IMAGE_DB_URL, IMAGES_STORE
+from scraper.scraper.settings import ( 
+    IMAGE_DB_URL, IMAGES_STORE, SKLAD_USERNAME, SKLAD_PSWD
+)
 
 DT_FORMAT = '%Y-%m-%d'
 
@@ -25,8 +27,8 @@ class EroskladSpider(scrapy.Spider):
             'https://www.erosklad.com/authorization/check',
             formdata={
                 '_target_path': '/',
-                '_username': 'info1882@mail.ru', 
-                '_password': '+Oo75055'
+                '_username': SKLAD_USERNAME, 
+                '_password': SKLAD_PSWD
             },
             callback=self.parse_after_login
         )
